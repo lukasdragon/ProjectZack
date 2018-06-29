@@ -30,7 +30,7 @@ namespace WindowsShellManager.Helpers
                 var ImageBase64 = Convert.ToBase64String(imageBytes);
                 return ImageBase64;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return "Error converting image to base64!";
             }

