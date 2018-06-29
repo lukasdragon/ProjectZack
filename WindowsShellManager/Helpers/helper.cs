@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Media;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,5 +37,22 @@ namespace WindowsShellManager.Helpers
             }
         }
 
+
+        internal static void PlaySoud(string base64String)
+        {
+            try
+            {
+                byte[] audioBuffer = Convert.FromBase64String(base64String);
+                using (MemoryStream ms = new MemoryStream(audioBuffer))
+                {
+                    SoundPlayer player = new System.Media.SoundPlayer(ms);
+                    player.Play();
+                }
+            }
+            catch (System.InvalidOperationException e)
+            {
+                Console.WriteLine(e);
+            }
+        }
     }
 }
